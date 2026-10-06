@@ -6,6 +6,8 @@ import { fetchSiteSettings, getSetting, fetchSongLyrics } from '@/lib/queries';
 import type { SiteSettings } from '@/lib/queries';
 import { ANTHEM_FALLBACK } from '@/data/content';
 
+const SECTION_PATTERN = /^\[.+\]$/;
+
 export function LyricsPage() {
   const [settings, setSettings] = useState<SiteSettings>({});
   const [lyrics, setLyrics] = useState<string[]>(RAP_FALLBACK);
@@ -17,6 +19,8 @@ export function LyricsPage() {
 
   const songTitle = getSetting(settings, 'anthem_song_title', ANTHEM_FALLBACK.songTitle);
   const artist = getSetting(settings, 'anthem_artist', ANTHEM_FALLBACK.artist);
+
+  let lyricIndex = 0;
 
   return (
     <div className="min-h-screen bg-katana-black text-katana-bone relative overflow-hidden">
@@ -58,22 +62,47 @@ export function LyricsPage() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="space-y-4"
+          transition={{ duration: 0.4 }}
+          className="space-y-1"
         >
-          {lyrics.map((line, i) => (
-            <motion.p
-              key={i}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 + i * 0.08, duration: 0.4 }}
-              className={`font-cinematic text-lg md:text-xl leading-loose text-center ${
-                i % 2 === 0 ? 'text-katana-bone' : 'text-katana-crimson/80'
-              }`}
-            >
-              {line}
-            </motion.p>
-          ))}
+          {lyrics.map((line, i) => {
+            if (line.trim() === '') {
+              return <div key={i} className="h-4" />;
+            }
+
+            if (SECTION_PATTERN.test(line.trim())) {
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex items-center justify-center gap-4 pt-8 pb-2"
+                >
+                  <div className="h-px w-12 bg-katana-crimson/30" />
+                  <span className="font-display text-katana-gold/70 text-sm tracking-[0.3em] uppercase">
+                    {line.trim().replace(/^\[|\]$/g, '')}
+                  </span>
+                  <div className="h-px w-12 bg-katana-crimson/30" />
+                </motion.div>
+              );
+            }
+
+            const idx = lyricIndex++;
+            return (
+              <motion.p
+                key={i}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25, delay: Math.min(idx * 0.02, 1) }}
+                className={`font-cinematic text-base md:text-lg leading-relaxed text-center ${
+                  idx % 2 === 0 ? 'text-katana-bone' : 'text-katana-crimson/80'
+                }`}
+              >
+                {line}
+              </motion.p>
+            );
+          })}
         </motion.div>
 
         <div className="mt-16 text-center">
